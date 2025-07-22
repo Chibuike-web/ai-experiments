@@ -1,0 +1,23 @@
+{
+	"name": "backend",
+	"version": "1.0.0",
+	"description": "",
+	"main": "./src/server.js",
+	"type": "module",
+	"scripts": {
+		"dev": "nodemon src/server.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.11.0",
+	"dependencies": {
+		"@mjackson/multipart-parser": "^0.10.1",
+		"cors": "^2.8.5",
+		"dotenv": "^16.5.0",
+		"express": "^5.1.0"
+	},
+	"devDependencies": {
+		"nodemon": "^3.0.2"
+	}
+}
