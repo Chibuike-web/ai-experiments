@@ -8,7 +8,7 @@ export default function App() {
 		<Router>
 			<Routes>
 				<Route path="/" element={<Single />} />
-				<Route path="/mutiple" element={<Multiple />} />
+				<Route path="/multiple" element={<Multiple />} />
 			</Routes>
 		</Router>
 	);

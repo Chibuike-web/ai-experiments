@@ -26,11 +26,12 @@ export default function Single() {
 			return;
 		}
 		const imgUrl = URL.createObjectURL(selectedImage);
-		setImages((prev) => [...prev, { file: selectedImage, url: imgUrl }]);
+		setImages((prev) => [...prev, { file: selectedImage, url: imgUrl, uploaded: false }]);
 	};
 
 	const handleSelect = (index) => {
 		setSelectImage(index);
+		setUploadedImage([]);
 	};
 
 	const handleUpload = async () => {
@@ -63,6 +64,10 @@ export default function Single() {
 					},
 				},
 			]);
+			const updatedImage = images.map((image, index) =>
+				index === selectImage ? { ...image, uploaded: true } : image
+			);
+			setImages(updatedImage);
 		} catch (err) {
 			console.error("Issue uploading image", err);
 		}
@@ -118,7 +123,7 @@ export default function Single() {
 			<aside className="p-6 bg-gray-100 h-full">
 				<div className="flex flex-col">
 					<ChooseFileCard handleFileChange={handleFileChange} inputRef={inputRef} />
-					{uploadedImage.length === 0 ? (
+					{!images[selectImage]?.uploaded ? (
 						<button
 							type="button"
 							onClick={handleUpload}
@@ -136,7 +141,7 @@ export default function Single() {
 						</button>
 					)}
 				</div>
-				<div>
+				<div className="flex flex-col gap-2 mt-12">
 					{images.map((img, index) => (
 						<FileUploadCard
 							key={index}
@@ -150,7 +155,7 @@ export default function Single() {
 				</div>
 			</aside>
 			<aside className="w-full flex px-10 gap-6">
-				{uploadedImage.length > 0 && (
+				{images[selectImage]?.uploaded && (
 					<ImageContainer
 						key={images[selectImage].file.filename}
 						image={images[selectImage].url}
