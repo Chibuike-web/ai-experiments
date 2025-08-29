@@ -7,12 +7,27 @@ import {
 	PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { useCompletion } from "@ai-sdk/react";
+import { ChatStatus } from "ai";
+import { useEffect, useState } from "react";
 
 export default function StreamPage() {
-	const { input, handleInputChange, handleSubmit, completion, isLoading, error, setInput } =
+	const [status, setStatus] = useState<ChatStatus>("ready");
+	const { input, handleInputChange, handleSubmit, completion, isLoading, error, setInput, stop } =
 		useCompletion({
 			api: "/api/stream",
+			onFinish() {
+				setStatus("ready");
+			},
+			onError() {
+				setStatus("error");
+			},
 		});
+
+	useEffect(() => {
+		if (isLoading && status === "submitted") {
+			setStatus("streaming");
+		}
+	}, [isLoading, status]);
 
 	return (
 		<main className=" w-full max-w-[600px] mx-auto mt-4">
@@ -26,16 +41,23 @@ export default function StreamPage() {
 						e.preventDefault();
 						handleSubmit();
 						setInput("");
+						setStatus("submitted");
 					}}
 				>
 					<PromptInputTextarea onChange={handleInputChange} value={input} />
 
 					<div className="p-2 flex justify-self-end">
-						{isLoading ? (
-							<PromptInputSubmit disabled={!input || isLoading} />
-						) : (
-							<PromptInputSubmit disabled={!input || isLoading} />
-						)}
+						<PromptInputSubmit
+							disabled={!input && status !== "streaming"}
+							status={status}
+							onClick={(e) => {
+								if (status === "streaming") {
+									e.preventDefault();
+									stop();
+									setStatus("ready");
+								}
+							}}
+						/>
 					</div>
 				</PromptInput>
 			</div>
