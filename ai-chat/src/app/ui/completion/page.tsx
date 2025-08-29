@@ -30,11 +30,11 @@ export default function CompletionPage() {
 				throw new Error(data.error || "Something went wrong");
 			}
 			setCompletion(data.text);
-			setPrompt("");
 		} catch (err) {
 			console.log(err);
 			setError(err instanceof Error ? err.message : "Something went wrong. Please try again");
 		} finally {
+			setPrompt("");
 			setIsLoading(false);
 		}
 	};
@@ -49,7 +49,13 @@ export default function CompletionPage() {
 
 			<div className=" w-full max-w-[600px] fixed bottom-8 left-1/2 -translate-x-1/2">
 				<PromptInput onSubmit={handleSubmit} className="mt-4">
-					<PromptInputTextarea onChange={(e) => setPrompt(e.target.value)} value={prompt} />
+					<PromptInputTextarea
+						onChange={(e) => {
+							setError("");
+							setPrompt(e.target.value);
+						}}
+						value={prompt}
+					/>
 
 					<div className="p-2 flex justify-self-end">
 						<PromptInputSubmit disabled={!prompt || isLoading} />
