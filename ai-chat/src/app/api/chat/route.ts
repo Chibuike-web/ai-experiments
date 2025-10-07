@@ -5,7 +5,14 @@ export async function POST(req: Request) {
 		const { messages }: { messages: UIMessage[] } = await req.json();
 		const result = streamText({
 			model: "openai/gpt-4.1-nano",
-			messages: convertToModelMessages(messages),
+			messages: [
+				{
+					role: "system",
+					content:
+						"You are a friendly teacher who explain concepts using simple analogies. Always relate concepts to everyday experiences",
+				},
+				...convertToModelMessages(messages),
+			],
 		});
 		result.usage.then((usage) => {
 			console.log({

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@mjackson/multipart-parser':
+        specifier: ^0.10.1
+        version: 0.10.1
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -29,6 +32,12 @@ importers:
         version: 3.1.10
 
 packages:
+
+  '@mjackson/headers@0.11.1':
+    resolution: {integrity: sha512-uXXhd4rtDdDwkqAuGef1nuafkCa1NlTmEc1Jzc0NL4YiA1yON1NFXuqJ3hOuKvNKQwkiDwdD+JJlKVyz4dunFA==}
+
+  '@mjackson/multipart-parser@0.10.1':
+    resolution: {integrity: sha512-cHMD6+ErH/DrEfC0N6Ru/+1eAdavxdV0C35PzSb5/SD7z3XoaDMc16xPJcb8CahWjSpqHY+Too9sAb6/UNuq7A==}
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -436,6 +445,12 @@ packages:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
 snapshots:
+
+  '@mjackson/headers@0.11.1': {}
+
+  '@mjackson/multipart-parser@0.10.1':
+    dependencies:
+      '@mjackson/headers': 0.11.1
 
   accepts@2.0.0:
     dependencies:

@@ -11,8 +11,8 @@
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"packageManager": "pnpm@10.10.0",
 	"dependencies": {
+		"@mjackson/multipart-parser": "^0.10.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.5.0",
 		"express": "^5.1.0",

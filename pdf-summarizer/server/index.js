@@ -8,7 +8,7 @@ const app = express();
 dotenv.config();
 
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json());
 
 const PORT = 5000;
 
