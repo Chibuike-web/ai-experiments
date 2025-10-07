@@ -1,6 +1,6 @@
-import { ChooseFileCard } from "../components/ChooseFileCard";
-import { FileUploadCard } from "../components/FileUploadCard";
-import { useHandleMultipleFiles } from "../MultipleHooks";
+import ChooseFileCard from "../components/ChooseFileCard";
+import FileUploadCard from "../components/FileUploadCard";
+import useHandleMultipleFiles from "../hooks/MultipleFileUploads";
 
 export default function Multiple() {
 	const {

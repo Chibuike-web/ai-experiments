@@ -1,6 +1,6 @@
-import { ChooseFileCard } from "../components/ChooseFileCard";
-import { FileUploadCard } from "../components/FileUploadCard";
-import { useHandleFile } from "../SingleHooks";
+import ChooseFileCard from "../components/ChooseFileCard";
+import FileUploadCard from "../components/FileUploadCard";
+import useHandleFile from "../hooks/SingleFileUpload";
 
 export default function Single() {
 	const {

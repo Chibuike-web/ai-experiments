@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent, useRef, useState } from "react";
 
 const MAXSIZEINBYTES = 50 * 1024 * 1024;
-export const useHandleFile = () => {
+export default function useHandleFile() {
 	const [file, setFile] = useState<File | null>(null);
 	const [parsedText, setParsedText] = useState("");
 	const [summary, setSummary] = useState("");
@@ -38,15 +38,15 @@ export const useHandleFile = () => {
 		if (!file) return;
 		const formData: FormData = new FormData();
 		formData.append("pdf", file);
-		let result: { text: string } = { text: "" };
+
 		setIsLoading(true);
 		try {
-			const response = await fetch("http://localhost:5000/parse-pdf", {
+			const res = await fetch("http://localhost:5000/parse-pdf", {
 				method: "POST",
 				body: formData,
 			});
 
-			result = await response.json();
+			const result = await res.json();
 			setParsedText(result.text);
 		} catch (error) {
 			console.error("Error uploading the file:", error);
@@ -73,7 +73,7 @@ export const useHandleFile = () => {
 			const data = await res.json();
 			setSummary(data.summary);
 		} catch (error) {
-			console.error(error.message);
+			console.error(error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -90,4 +90,4 @@ export const useHandleFile = () => {
 		handleParse,
 		handleSummarize,
 	};
-};
+}

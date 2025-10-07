@@ -1,10 +1,10 @@
 import { ChangeEvent, FormEvent, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { FileWithId } from "./types";
+import { FileWithId } from "../lib/types";
 
 const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024;
 
-export const useHandleMultipleFiles = () => {
+export default function useHandleMultipleFiles() {
 	const [files, setFiles] = useState<FileWithId[]>([]);
 	const [parsedText, setParsedText] = useState("");
 	const [summary, setSummary] = useState("");
@@ -103,7 +103,7 @@ export const useHandleMultipleFiles = () => {
 			const data = await res.json();
 			setSummary(data.summary);
 		} catch (error) {
-			console.error(error.message);
+			console.error(error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -122,4 +122,4 @@ export const useHandleMultipleFiles = () => {
 		parsedText,
 		uploadRef,
 	};
-};
+}

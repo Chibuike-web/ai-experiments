@@ -1,5 +1,6 @@
-import { CancelIcon, FileFormatIcon } from "../Icons";
-import { formatFileSize } from "../utils";
+import CancelIcon from "../icons/CancelIcon";
+import FileFormatIcon from "../icons/FileFormatIcon";
+import { formatFileSize } from "../lib/utils";
 
 type FileUploadCardProps = {
 	file: File;
@@ -9,13 +10,13 @@ type FileUploadCardProps = {
 	onClear: () => void;
 };
 
-export const FileUploadCard = ({
+export default function FileUploadCard({
 	id,
 	file,
 	onClear,
 	handleSelectPdf,
 	selectPdf,
-}: FileUploadCardProps) => {
+}: FileUploadCardProps) {
 	if (!file) return null;
 
 	const isSelected = id && id === selectPdf;
@@ -53,4 +54,4 @@ export const FileUploadCard = ({
 			</div>
 		</div>
 	);
-};
+}

@@ -1,6 +1,13 @@
-import { UploadIcon } from "../Icons";
+import { ChangeEvent, Ref } from "react";
+import UploadIcon from "../icons/UploadIcon";
 
-export const ChooseFileCard = ({ handleFileChange, uploadRef }) => {
+export default function ChooseFileCard({
+	handleFileChange,
+	uploadRef,
+}: {
+	handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+	uploadRef: Ref<HTMLInputElement>;
+}) {
 	return (
 		<label className="w-full relative block">
 			<input
@@ -22,4 +29,4 @@ export const ChooseFileCard = ({ handleFileChange, uploadRef }) => {
 			</div>
 		</label>
 	);
-};
+}
