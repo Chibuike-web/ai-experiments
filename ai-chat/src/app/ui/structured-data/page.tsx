@@ -39,7 +39,6 @@ export default function StructedDataPage() {
 				<PromptInput
 					className="mt-4"
 					onSubmit={(e) => {
-						e.preventDefault();
 						handleSubmit();
 						setInput("");
 						setStatus("submitted");

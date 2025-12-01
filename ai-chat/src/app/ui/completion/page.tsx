@@ -3,26 +3,26 @@
 import { Loader } from "@/components/ai-elements/loader";
 import {
 	PromptInput,
+	PromptInputMessage,
 	PromptInputSubmit,
 	PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
 export default function CompletionPage() {
-	const [prompt, setPrompt] = useState("");
 	const [completion, setCompletion] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
+	const [status, setStatus] = useState<"submitted" | "streaming" | "ready" | "error">("ready");
 	const [error, setError] = useState<string | null>(null);
 
-	const handleSubmit = async (e: FormEvent) => {
+	const handleSubmit = async (message: PromptInputMessage, e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		setIsLoading(true);
+		setStatus("streaming");
 		try {
 			const response = await fetch("/api/completion", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ prompt }),
+				body: JSON.stringify({ prompt: message.text }),
 			});
 
 			const data = await response.json();
@@ -34,14 +34,13 @@ export default function CompletionPage() {
 			console.log(err);
 			setError(err instanceof Error ? err.message : "Something went wrong. Please try again");
 		} finally {
-			setPrompt("");
-			setIsLoading(false);
+			setStatus("ready");
 		}
 	};
 	return (
-		<main className=" w-full max-w-[600px] mx-auto mt-4">
+		<main className=" w-full max-w-[600px] mx-auto mt-4 px-6 xl:px-0">
 			{error && <div className="text-red-500">{error}</div>}
-			{isLoading ? (
+			{status === "streaming" ? (
 				<Loader />
 			) : completion ? (
 				<div className="whitespace-pre-wrap">{completion}</div>
@@ -52,13 +51,19 @@ export default function CompletionPage() {
 					<PromptInputTextarea
 						onChange={(e) => {
 							setError("");
-							setPrompt(e.target.value);
 						}}
-						value={prompt}
 					/>
 
 					<div className="p-2 flex justify-self-end">
-						<PromptInputSubmit disabled={!prompt || isLoading} />
+						<PromptInputSubmit
+							status={status}
+							onClick={(e) => {
+								if (status === "streaming") {
+									e.preventDefault();
+									stop();
+								}
+							}}
+						/>
 					</div>
 				</PromptInput>
 			</div>

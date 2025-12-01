@@ -1,14 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-	serverExternalPackages: [
-		"zod",
-		"bcryptjs",
-		"uuid",
-		"class-variance-authority",
-		"clsx",
-		"@hookform/resolvers",
-	],
+	reactCompiler: false,
+	cacheComponents: true,
+	logging: {
+		fetches: {
+			fullUrl: true,
+		},
+	},
+	experimental: {
+		turbopackFileSystemCacheForDev: true,
+	},
 };
 
 export default nextConfig;
