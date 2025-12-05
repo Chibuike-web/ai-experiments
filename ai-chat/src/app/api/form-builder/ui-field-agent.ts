@@ -1,68 +1,101 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { uiFieldSchema } from "./ui-field-schema";
 
 const systemPrompt = `
-You generate UI form configuration.
+You generate UI form configuration based on a JSON schema.
 
-Input: a JSON schema with:
+INPUT FORMAT:
 {
   "fields": [
-    { "name": string, "type": string, "required": boolean, "options"?: string[] }
+    {
+      "name": string,
+      "type": 
+        "string" |
+        "text-area" |
+        "number" |
+        "boolean" |
+        "date" |
+        "enum" |
+        "file" |
+        "radio",
+      "required": boolean,
+      "options"?: string[]
+    }
   ]
 }
 
-Output must be:
+OUTPUT FORMAT (must match the Zod schema exactly):
 {
   "fields": [
     {
       "id": string,
       "label": string,
-      "component": "text" | "number" | "checkbox" | "select" | "date",
+      "component":
+        "text" |
+        "text-area" |
+        "number" |
+        "checkbox" |
+        "date" |
+        "select" |
+        "file" |
+        "radio",
       "required": boolean,
       "options": string[]
     }
   ]
 }
 
-Mapping rules:
-- id = name
-- label = title case version of name
-- required = same as schema
-- component mapping:
-    string -> text
-    number -> number
-    boolean -> checkbox
-    date -> date
-    enum -> select
-- For enum, options must match schema options exactly.
-- For non enum, options = [].
-- Never omit required.
-- Never omit options.
-- Never generate extra fields.
-- Output only JSON that matches the provided Zod schema.
+STRICT MAPPING RULES:
+1. id = input.name exactly.
+2. label = name converted to Title Case with spaces.
+   Examples:
+   - "firstName" → "First Name"
+   - "user_bio" → "User Bio"
+3. required = same as input.required.
+
+4. Component mapping:
+   - type "string" → component "text"
+   - type "text-area" → component "text-area"
+   - type "number" → component "number"
+   - type "boolean" → component "checkbox"
+   - type "date" → component "date"
+   - type "enum" → component "select"
+   - type "file" → component "file"
+   - type "radio" → component "radio"
+
+5. options:
+   - For enum → use input.options exactly.
+   - For radio → use input.options exactly.
+   - For all other types → options = [].
+
+6. Never generate fields that are not in the input.
+7. Never omit "required" or "options".
+8. Output must be pure JSON matching the Zod schema—no comments, no explanation, no extra text.
 `;
 
-export async function uiFieldAgent(schemaObj: unknown) {
+export async function uiFieldAgent(schema: string) {
 	const prompt = `
 Convert this JSON schema into UI field configuration.
 
 JSON Schema:
-${JSON.stringify(schemaObj, null, 2)}
+${schema}
   `;
 
 	console.log("UI AGENT RUN");
 
 	try {
-		const { object } = await generateObject({
+		const result = await generateText({
 			model: "openai/gpt-4.1-nano",
 			system: systemPrompt,
 			prompt,
-			schema: uiFieldSchema,
+			output: Output.object({
+				schema: uiFieldSchema,
+			}),
 		});
 
 		return {
 			ok: true,
-			ui: object,
+			ui: result.output,
 		};
 	} catch (error) {
 		console.error("UI AGENT ERROR:", error);

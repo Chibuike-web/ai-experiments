@@ -18,22 +18,7 @@ export async function POST(req: Request) {
 			);
 		}
 
-		console.log("RAW SCHEMA:", schemaRes.schema);
-
-		let parsedSchema;
-		try {
-			parsedSchema = JSON.parse(schemaRes.schema ?? "");
-		} catch {
-			return new Response(
-				JSON.stringify({
-					status: "failed",
-					error: "Invalid JSON returned from schema agent",
-				}),
-				{ status: 400 }
-			);
-		}
-
-		const uiRes = await uiFieldAgent(parsedSchema);
+		const uiRes = await uiFieldAgent(schemaRes.schema ?? "");
 		if (!uiRes.ok) {
 			return new Response(
 				JSON.stringify({
