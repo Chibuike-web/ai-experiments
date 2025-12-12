@@ -1,10 +1,16 @@
-import { streamText, UIMessage, convertToModelMessages } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { streamText, UIMessage, convertToModelMessages, wrapLanguageModel, gateway } from "ai";
+
+const model = wrapLanguageModel({
+	model: gateway("openai/gpt-4.1-nano"),
+	middleware: devToolsMiddleware(),
+});
 
 export async function POST(req: Request) {
 	try {
 		const { messages }: { messages: UIMessage[] } = await req.json();
 		const result = streamText({
-			model: "openai/gpt-4.1-nano",
+			model,
 			messages: [
 				{
 					role: "system",
@@ -13,14 +19,6 @@ export async function POST(req: Request) {
 				},
 				...convertToModelMessages(messages),
 			],
-		});
-		result.usage.then((usage) => {
-			console.log({
-				messageCount: messages.length,
-				inputTokens: usage.inputTokens,
-				outputTokens: usage.outputTokens,
-				totalTokens: usage.totalTokens,
-			});
 		});
 
 		return result.toUIMessageStreamResponse();

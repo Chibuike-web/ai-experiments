@@ -1,4 +1,5 @@
-import { generateText } from "ai";
+import { gateway, generateText, wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 const systemPrompt = `
 You are a form schema generator.
@@ -138,10 +139,15 @@ Output:
 FINAL RULE
 -------------------------------------
 Return ONLY the JSON schema. No commentary, no explanations.`;
+
+const model = wrapLanguageModel({
+	model: gateway("openai/gpt-4.1-nano"),
+	middleware: devToolsMiddleware(),
+});
 export async function schemaAgent(userInput: string) {
 	try {
 		const { text } = await generateText({
-			model: "openai/gpt-4.1-nano",
+			model,
 			system: systemPrompt,
 			prompt: userInput,
 		});

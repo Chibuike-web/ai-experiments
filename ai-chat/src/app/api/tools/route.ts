@@ -1,9 +1,22 @@
-import { streamText, UIMessage, convertToModelMessages, tool, stepCountIs } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+import {
+	streamText,
+	UIMessage,
+	convertToModelMessages,
+	tool,
+	stepCountIs,
+	wrapLanguageModel,
+	gateway,
+} from "ai";
 import { z } from "zod";
+
+const model = wrapLanguageModel({
+	model: gateway("openai/gpt-4.1-nano"),
+	middleware: devToolsMiddleware(),
+});
 
 const tools = {
 	getWeather: tool({
-		name: "getWeather",
 		description: "Get the weather for a specific location",
 		inputSchema: z.object({
 			city: z.string().describe("The location to get the weather for"),
@@ -21,9 +34,9 @@ export async function POST(req: Request) {
 	try {
 		const { messages }: { messages: UIMessage[] } = await req.json();
 		const result = streamText({
-			model: "openai/gpt-4.1-nano",
+			model,
 			messages: convertToModelMessages(messages),
-			tools,
+			tools: tools,
 			stopWhen: stepCountIs(2),
 		});
 		return result.toUIMessageStreamResponse();

@@ -1,5 +1,6 @@
-import { generateText, Output } from "ai";
+import { gateway, generateText, Output, wrapLanguageModel } from "ai";
 import { uiFieldSchema } from "./ui-field-schema";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 const systemPrompt = `
 You generate UI form configuration based on a JSON schema.
@@ -73,6 +74,10 @@ STRICT MAPPING RULES:
 8. Output must be pure JSON matching the Zod schema—no comments, no explanation, no extra text.
 `;
 
+const model = wrapLanguageModel({
+	model: gateway("openai/gpt-4.1-nano"),
+	middleware: devToolsMiddleware(),
+});
 export async function uiFieldAgent(schema: string) {
 	const prompt = `
 Convert this JSON schema into UI field configuration.
@@ -85,7 +90,7 @@ ${schema}
 
 	try {
 		const result = await generateText({
-			model: "openai/gpt-4.1-nano",
+			model,
 			system: systemPrompt,
 			prompt,
 			output: Output.object({
