@@ -1,5 +1,7 @@
+import { db } from "@/db";
 import { schemaAgent } from "./schema-agent";
 import { uiFieldAgent } from "./ui-field-agent";
+import { form } from "@/db/schemas/form";
 
 export async function POST(req: Request) {
 	try {
@@ -31,7 +33,19 @@ export async function POST(req: Request) {
 		}
 
 		console.log(uiRes.ui);
-		return new Response(JSON.stringify({ status: "success", content: uiRes.ui }), { status: 200 });
+		const formData = await db
+			.insert(form)
+			.values({
+				id: crypto.randomUUID(),
+				prompt: input,
+				jsonSchema: schemaRes.schema,
+				uiSchema: uiRes.ui,
+			})
+			.returning();
+		return new Response(
+			JSON.stringify({ status: "success", content: uiRes.ui, id: formData[0].id }),
+			{ status: 200 }
+		);
 	} catch (error) {
 		return new Response(JSON.stringify({ status: "failed", error: "Unexpected error" }), {
 			status: 500,

@@ -86,8 +86,6 @@ JSON Schema:
 ${schema}
   `;
 
-	console.log("UI AGENT RUN");
-
 	try {
 		const result = await generateText({
 			model,

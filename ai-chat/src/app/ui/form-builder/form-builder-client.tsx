@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { separateString } from "@/lib/separate-string";
 import { toSentenceCase } from "@/lib/toSentenceCase";
 import {
 	Select,
@@ -19,8 +18,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ChevronDownIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 
-type UIType = {
+export type UIType = {
 	id: string;
 	label: string;
 	component: string;
@@ -34,6 +40,9 @@ export default function FormBuilderClient() {
 	const [ui, setUi] = useState<UIType[]>([]);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [date, setDate] = useState<Date | undefined>(undefined);
+	const [userId, setUserId] = useState("");
+
+	const shareUrl = `${process.env.NEXT_PUBLIC_URL}/ui/form-builder/${userId}`;
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -63,6 +72,7 @@ export default function FormBuilderClient() {
 
 				console.log(data);
 				setUi(data.content.fields);
+				setUserId(data.id);
 
 				if (inputRef.current) inputRef.current.value = "";
 			} catch {
@@ -166,7 +176,7 @@ export default function FormBuilderClient() {
 												<div key={u.id}>
 													<Label htmlFor={u.id}>
 														<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
-														{separateString(u.label)}
+														{u.label}
 													</Label>
 												</div>
 											);
@@ -174,7 +184,7 @@ export default function FormBuilderClient() {
 										case "select":
 											return (
 												<div key={u.id} className="w-full">
-													<Label htmlFor={u.id}>{separateString(u.label)}</Label>
+													<Label htmlFor={u.id}>{u.label}</Label>
 													<Select name={u.id} required={u.required}>
 														<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
 															<SelectValue placeholder="Select an option" />
@@ -200,7 +210,7 @@ export default function FormBuilderClient() {
 										case "radio":
 											return (
 												<div key={u.id}>
-													<p className="mb-2 font-medium">{separateString(u.label)}</p>
+													<p className="mb-2 font-medium">(u.label)</p>
 													<RadioGroup name={u.id} required={u.required}>
 														{u.options.length > 0 &&
 															u.options.map((opt) => (
@@ -238,9 +248,25 @@ export default function FormBuilderClient() {
 								})}
 							</div>
 
-							<Button type="submit" className="w-full mt-10">
-								Submit
-							</Button>
+							<Dialog>
+								<DialogTrigger asChild>
+									<Button type="button" className="w-full mt-10">
+										Share Form
+									</Button>
+								</DialogTrigger>
+
+								<DialogContent>
+									<DialogTitle>
+										<DialogHeader>Share the link with anybody</DialogHeader>
+									</DialogTitle>
+									<div className="mt-4 flex items-center gap-2">
+										<Input readOnly value={shareUrl} className="flex-1" />
+										<Button type="button" onClick={() => navigator.clipboard.writeText(shareUrl)}>
+											Copy
+										</Button>
+									</div>
+								</DialogContent>
+							</Dialog>
 						</>
 					)}
 				</form>
