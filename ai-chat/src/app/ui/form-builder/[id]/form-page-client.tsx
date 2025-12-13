@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { separateString } from "@/lib/separate-string";
 import { toSentenceCase } from "@/lib/toSentenceCase";
 import {
 	Select,
@@ -147,7 +146,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 										<div key={u.id}>
 											<Label htmlFor={u.id}>
 												<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
-												{separateString(u.label)}
+												{u.label}
 											</Label>
 										</div>
 									);
@@ -155,7 +154,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 								case "select":
 									return (
 										<div key={u.id} className="w-full">
-											<Label htmlFor={u.id}>{separateString(u.label)}</Label>
+											<Label htmlFor={u.id}>{u.label}</Label>
 											<Select name={u.id} required={u.required}>
 												<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
 													<SelectValue placeholder="Select an option" />
@@ -181,7 +180,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 								case "radio":
 									return (
 										<div key={u.id}>
-											<p className="mb-2 font-medium">{separateString(u.label)}</p>
+											<p className="mb-2 font-medium">{u.label}</p>
 											<RadioGroup name={u.id} required={u.required}>
 												{u.options.length > 0 &&
 													u.options.map((opt) => (
@@ -200,7 +199,11 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 											<Label htmlFor={u.id} className="mb-2">
 												{u.label}
 											</Label>
-											<Textarea placeholder="Describe your form" className="bg-white" name={u.id} />
+											<Textarea
+												placeholder={`Enter ${u.label.toLowerCase()} here`}
+												className="bg-white"
+												name={u.id}
+											/>
 										</div>
 									);
 								default:

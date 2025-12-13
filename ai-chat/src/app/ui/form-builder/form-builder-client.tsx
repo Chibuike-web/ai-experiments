@@ -41,6 +41,7 @@ export default function FormBuilderClient() {
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [date, setDate] = useState<Date | undefined>(undefined);
 	const [userId, setUserId] = useState("");
+	const [title, setTitle] = useState("");
 
 	const shareUrl = `${process.env.NEXT_PUBLIC_URL}/ui/form-builder/${userId}`;
 
@@ -48,6 +49,7 @@ export default function FormBuilderClient() {
 		e.preventDefault();
 		setError("");
 		setUi([]);
+		setTitle("");
 		const formdata = new FormData(e.currentTarget);
 		const input = formdata.get("input") as string;
 
@@ -71,8 +73,9 @@ export default function FormBuilderClient() {
 				}
 
 				console.log(data);
-				setUi(data.content.fields);
+				setUi(data.ui.fields);
 				setUserId(data.id);
+				setTitle(data.title);
 
 				if (inputRef.current) inputRef.current.value = "";
 			} catch {
@@ -82,195 +85,192 @@ export default function FormBuilderClient() {
 	};
 
 	return (
-		<main className="max-w-6xl mx-auto py-10 px-6 xl:px-0">
-			<div className="flex flex-col md:flex-row gap-10 bg-gray-50 p-4 rounded-2xl">
-				<div className="flex flex-col gap-4 w-full">
-					<div className="w-full">
-						<h1 className="text-4xl font-bold">Form Builder</h1>
-						<p className="text-[18px] text-muted-foreground mt-2">
-							Describe what information you want to collect and we’ll generate the form for it
-						</p>
-					</div>
-					<div className="w-full">
-						<form className="flex flex-col items-center gap-2" onSubmit={handleSubmit}>
-							<Textarea
-								ref={inputRef}
-								placeholder="Describe your form"
-								className="bg-white"
-								name="input"
-								onInput={() => setError("")}
-							/>
-							<Button className="w-full" disabled={isPending} type="submit">
-								{isPending ? "Creating..." : "Create"}
-							</Button>
-						</form>
-
-						{error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-					</div>
+		<main className="max-w-xl flex flex-col gap-20 mx-auto py-10 px-6 xl:px-0">
+			<div className="flex flex-col gap-4 w-full">
+				<div className="w-full">
+					<h1 className="text-4xl font-bold">Form Builder</h1>
+					<p className="text-[18px] text-muted-foreground mt-2">
+						Describe what information you want to collect and we’ll generate the form for it
+					</p>
 				</div>
-				<form className="w-full">
-					<h2 className="text-2xl font-semibold mb-4">Generated Form</h2>
-					{ui.length > 0 && (
-						<>
-							<div className="flex flex-col gap-4">
-								{ui.map((u) => {
-									const commonProps = {
-										id: u.id,
-										name: u.id,
-										required: u.required,
-									};
+				<div className="w-full">
+					<form className="flex flex-col items-center gap-2" onSubmit={handleSubmit}>
+						<Textarea
+							ref={inputRef}
+							placeholder="Describe your form"
+							className="bg-white"
+							name="input"
+							onInput={() => setError("")}
+						/>
+						<Button className="w-full" disabled={isPending} type="submit">
+							{isPending ? "Creating..." : "Create"}
+						</Button>
+					</form>
 
-									switch (u.component) {
-										case "text":
-										case "number":
-										case "file":
-											return (
-												<div key={u.id}>
-													<div className="flex items-center gap-1 mb-2">
-														<Label htmlFor={u.id}>{u.label}</Label>
-														<span className="text-[14px] text-muted-foreground">
-															{u.required && "(required)"}
-														</span>
-													</div>
-													<Input
-														type={u.component}
-														{...commonProps}
-														placeholder={`Enter your ${u.label}`}
-														className="bg-white"
-													/>
-												</div>
-											);
-
-										case "date":
-											return (
-												<div key={u.id}>
-													<Label htmlFor={u.id} className="mb-2">
-														{u.label}
-													</Label>
-													<Popover>
-														<PopoverTrigger asChild>
-															<Button
-																variant="outline"
-																id="date"
-																className="justify-between font-normal w-full text-[16px] text-muted-foreground hover:bg-white hover:text-muted-foreground"
-															>
-																{date ? date.toDateString() : u.label}
-																<ChevronDownIcon />
-															</Button>
-														</PopoverTrigger>
-														<PopoverContent className="w-auto overflow-hidden p-0" align="start">
-															<Calendar
-																mode="single"
-																selected={date}
-																captionLayout="dropdown"
-																onSelect={(date) => {
-																	setDate(date);
-																}}
-															/>
-														</PopoverContent>
-													</Popover>
-												</div>
-											);
-										case "checkbox":
-											return (
-												<div key={u.id}>
-													<Label htmlFor={u.id}>
-														<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
-														{u.label}
-													</Label>
-												</div>
-											);
-
-										case "select":
-											return (
-												<div key={u.id} className="w-full">
-													<Label htmlFor={u.id}>{u.label}</Label>
-													<Select name={u.id} required={u.required}>
-														<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
-															<SelectValue placeholder="Select an option" />
-														</SelectTrigger>
-
-														<SelectContent>
-															{u.options && u.options.length > 0 ? (
-																u.options.map((opt) => (
-																	<SelectItem key={opt} value={opt}>
-																		{toSentenceCase(opt)}
-																	</SelectItem>
-																))
-															) : (
-																<SelectItem value="" disabled>
-																	No options
-																</SelectItem>
-															)}
-														</SelectContent>
-													</Select>
-												</div>
-											);
-
-										case "radio":
-											return (
-												<div key={u.id}>
-													<p className="mb-2 font-medium">(u.label)</p>
-													<RadioGroup name={u.id} required={u.required}>
-														{u.options.length > 0 &&
-															u.options.map((opt) => (
-																<div key={opt} className="flex items-center gap-3">
-																	<RadioGroupItem value={opt} id={`${u.id}-${opt}`} />
-																	<Label htmlFor={`${u.id}-${opt}`}>{toSentenceCase(opt)}</Label>
-																</div>
-															))}
-													</RadioGroup>
-												</div>
-											);
-
-										case "text-area":
-											return (
-												<div key={u.id}>
-													<Label htmlFor={u.id} className="mb-2">
-														{u.label}
-													</Label>
-													<Textarea
-														ref={inputRef}
-														placeholder="Describe your form"
-														className="bg-white"
-														name={u.id}
-													/>
-												</div>
-											);
-										default:
-											return (
-												<div key={u.id}>
-													<Label htmlFor={u.id}> {u.label}</Label>
-													<Input type="text" {...commonProps} />
-												</div>
-											);
-									}
-								})}
-							</div>
-
-							<Dialog>
-								<DialogTrigger asChild>
-									<Button type="button" className="w-full mt-10">
-										Share Form
-									</Button>
-								</DialogTrigger>
-
-								<DialogContent>
-									<DialogTitle>
-										<DialogHeader>Share the link with anybody</DialogHeader>
-									</DialogTitle>
-									<div className="mt-4 flex items-center gap-2">
-										<Input readOnly value={shareUrl} className="flex-1" />
-										<Button type="button" onClick={() => navigator.clipboard.writeText(shareUrl)}>
-											Copy
-										</Button>
-									</div>
-								</DialogContent>
-							</Dialog>
-						</>
-					)}
-				</form>
+					{error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+				</div>
 			</div>
+			<form className="w-full">
+				{title && <h2 className="text-2xl font-semibold mb-4">{title}</h2>}
+				{ui.length > 0 && (
+					<>
+						<div className="flex flex-col gap-4">
+							{ui.map((u) => {
+								const commonProps = {
+									id: u.id,
+									name: u.id,
+									required: u.required,
+								};
+
+								switch (u.component) {
+									case "text":
+									case "number":
+									case "file":
+										return (
+											<div key={u.id}>
+												<div className="flex items-center gap-1 mb-2">
+													<Label htmlFor={u.id}>{u.label}</Label>
+													<span className="text-[14px] text-muted-foreground">
+														{u.required && "(required)"}
+													</span>
+												</div>
+												<Input
+													type={u.component}
+													{...commonProps}
+													placeholder={`Enter your ${u.label}`}
+													className="bg-white"
+												/>
+											</div>
+										);
+
+									case "date":
+										return (
+											<div key={u.id}>
+												<Label htmlFor={u.id} className="mb-2">
+													{u.label}
+												</Label>
+												<Popover>
+													<PopoverTrigger asChild>
+														<Button
+															variant="outline"
+															id="date"
+															className="justify-between font-normal w-full text-[16px] text-muted-foreground hover:bg-white hover:text-muted-foreground"
+														>
+															{date ? date.toDateString() : u.label}
+															<ChevronDownIcon />
+														</Button>
+													</PopoverTrigger>
+													<PopoverContent className="w-auto overflow-hidden p-0" align="start">
+														<Calendar
+															mode="single"
+															selected={date}
+															captionLayout="dropdown"
+															onSelect={(date) => {
+																setDate(date);
+															}}
+														/>
+													</PopoverContent>
+												</Popover>
+											</div>
+										);
+									case "checkbox":
+										return (
+											<div key={u.id}>
+												<Label htmlFor={u.id}>
+													<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
+													{u.label}
+												</Label>
+											</div>
+										);
+
+									case "select":
+										return (
+											<div key={u.id} className="w-full">
+												<Label htmlFor={u.id}>{u.label}</Label>
+												<Select name={u.id} required={u.required}>
+													<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
+														<SelectValue placeholder="Select an option" />
+													</SelectTrigger>
+
+													<SelectContent>
+														{u.options && u.options.length > 0 ? (
+															u.options.map((opt) => (
+																<SelectItem key={opt} value={opt}>
+																	{toSentenceCase(opt)}
+																</SelectItem>
+															))
+														) : (
+															<SelectItem value="" disabled>
+																No options
+															</SelectItem>
+														)}
+													</SelectContent>
+												</Select>
+											</div>
+										);
+
+									case "radio":
+										return (
+											<div key={u.id}>
+												<p className="mb-2 font-medium">{u.label}</p>
+												<RadioGroup name={u.id} required={u.required}>
+													{u.options.length > 0 &&
+														u.options.map((opt) => (
+															<div key={opt} className="flex items-center gap-3">
+																<RadioGroupItem value={opt} id={`${u.id}-${opt}`} />
+																<Label htmlFor={`${u.id}-${opt}`}>{toSentenceCase(opt)}</Label>
+															</div>
+														))}
+												</RadioGroup>
+											</div>
+										);
+
+									case "text-area":
+										return (
+											<div key={u.id}>
+												<Label htmlFor={u.id} className="mb-2">
+													{u.label}
+												</Label>
+												<Textarea
+													placeholder={`Enter ${u.label.toLowerCase()} here`}
+													className="bg-white"
+													name={u.id}
+												/>
+											</div>
+										);
+									default:
+										return (
+											<div key={u.id}>
+												<Label htmlFor={u.id}> {u.label}</Label>
+												<Input type="text" {...commonProps} />
+											</div>
+										);
+								}
+							})}
+						</div>
+
+						<Dialog>
+							<DialogTrigger asChild>
+								<Button type="button" className="w-full mt-10">
+									Share Form Link
+								</Button>
+							</DialogTrigger>
+
+							<DialogContent>
+								<DialogTitle>
+									<DialogHeader>Share the link with anybody</DialogHeader>
+								</DialogTitle>
+								<div className="mt-4 flex items-center gap-2">
+									<Input readOnly value={shareUrl} className="flex-1" />
+									<Button type="button" onClick={() => navigator.clipboard.writeText(shareUrl)}>
+										Copy
+									</Button>
+								</div>
+							</DialogContent>
+						</Dialog>
+					</>
+				)}
+			</form>
 		</main>
 	);
 }
