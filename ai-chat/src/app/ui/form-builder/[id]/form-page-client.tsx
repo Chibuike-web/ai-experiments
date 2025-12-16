@@ -21,19 +21,38 @@ import { FormEvent, useState } from "react";
 import type { UIType } from "../form-builder-client";
 
 export default function FormPageClient({ ui }: { ui: UIType[] }) {
-	const [dates, setDates] = useState<(Date | undefined)[]>([]);
-	const [texts, setTexts] = useState<string[]>([]);
+	const [dates, setDates] = useState<Record<string, Date | undefined>>({});
+	const [texts, setTexts] = useState<Record<string, string>>({});
+	const [numbers, setNumbers] = useState<Record<string, string>>({});
+	const [textAreas, setTextAreas] = useState<Record<string, string>>({});
+	const [errors, setErrors] = useState({});
 
-	const handleDate = (index: number, value: Date | undefined) => {
-		const newDates = [...dates];
-		newDates[index] = value;
-		setDates(newDates);
+	const handleDate = (id: string, value: Date | undefined) => {
+		setDates((prev) => ({
+			...prev,
+			[id]: value,
+		}));
 	};
 
-	const handleText = (index: number, value: string) => {
-		const newTexts = [...texts];
-		newTexts[index] = value;
-		setTexts(newTexts);
+	const handleText = (id: string, value: string) => {
+		setTexts((prev) => ({
+			...prev,
+			[id]: value,
+		}));
+	};
+
+	const handleNumber = (id: string, value: string) => {
+		setNumbers((prev) => ({
+			...prev,
+			[id]: value,
+		}));
+	};
+
+	const handleTextArea = (id: string, value: string) => {
+		setTextAreas((prev) => ({
+			...prev,
+			[id]: value,
+		}));
 	};
 
 	const handleFormSubmit = (e: FormEvent) => {
@@ -41,6 +60,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 		console.log({
 			date: dates,
 			text: texts,
+			number: numbers,
 		});
 	};
 
@@ -71,8 +91,14 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												{...commonProps}
 												placeholder={`Enter your ${u.label}`}
 												className="bg-white"
-												value={texts[index] ?? ""}
-												onChange={(e) => handleText(index, e.target.value)}
+												value={texts[u.id] ?? ""}
+												onChange={(e) => handleText(u.id, e.target.value)}
+												onInput={() =>
+													setErrors((prev) => ({
+														...prev,
+														[u.id]: "",
+													}))
+												}
 											/>
 										</div>
 									);
@@ -90,6 +116,14 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												{...commonProps}
 												placeholder={`Enter your ${u.label}`}
 												className="bg-white"
+												value={numbers[u.id]}
+												onChange={(e) => handleNumber(u.id, e.target.value)}
+												onInput={() =>
+													setErrors((prev) => ({
+														...prev,
+														[u.id]: "",
+													}))
+												}
 											/>
 										</div>
 									);
@@ -131,10 +165,10 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												<PopoverContent className="w-auto overflow-hidden p-0" align="start">
 													<Calendar
 														mode="single"
-														selected={dates[index]}
+														selected={dates[u.id]}
 														captionLayout="dropdown"
 														onSelect={(d) => {
-															handleDate(index, d);
+															handleDate(u.id, d);
 														}}
 													/>
 												</PopoverContent>
@@ -203,6 +237,8 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												placeholder={`Enter ${u.label.toLowerCase()} here`}
 												className="bg-white"
 												name={u.id}
+												value={textAreas[u.id]}
+												onChange={(e) => handleTextArea(u.id, e.target.value)}
 											/>
 										</div>
 									);
