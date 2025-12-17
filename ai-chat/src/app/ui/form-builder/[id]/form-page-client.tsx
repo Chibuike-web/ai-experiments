@@ -25,7 +25,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 	const [texts, setTexts] = useState<Record<string, string>>({});
 	const [numbers, setNumbers] = useState<Record<string, string>>({});
 	const [textAreas, setTextAreas] = useState<Record<string, string>>({});
-	const [errors, setErrors] = useState({});
+	const [errors, setErrors] = useState<Record<string, string>>({});
 
 	const handleDate = (id: string, value: Date | undefined) => {
 		setDates((prev) => ({
@@ -56,12 +56,79 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 	};
 
 	const handleFormSubmit = (e: FormEvent) => {
+		console.log("Error");
+		setErrors({});
 		e.preventDefault();
-		console.log({
+		const formData = {
 			date: dates,
 			text: texts,
 			number: numbers,
+		};
+		const newErrors: Record<string, string> = {};
+
+		ui.forEach((field) => {
+			if (!field.required) return;
+
+			switch (field.component) {
+				case "text": {
+					const value = texts[field.id];
+					if (!value || value.trim() === "") {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
+
+				case "number": {
+					const value = numbers[field.id];
+					if (value === undefined || value === "") {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
+
+				case "date": {
+					const value = dates[field.id];
+					if (!value) {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
+
+				case "text-area": {
+					const value = textAreas[field.id];
+					if (!value || value.trim() === "") {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
+
+				case "select":
+				case "radio": {
+					const value = texts[field.id];
+					if (!value) {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
+
+				case "file": {
+					// If you later store files in state, validate here
+					break;
+				}
+
+				case "checkbox": {
+					// Native checkbox "required" handles this
+					break;
+				}
+			}
 		});
+
+		if (Object.keys(newErrors).length > 0) {
+			setErrors(newErrors);
+			return;
+		}
+
+		console.log(formData);
 	};
 
 	return (
@@ -69,11 +136,10 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 			{ui.length > 0 && (
 				<>
 					<div className="flex flex-col gap-4">
-						{ui.map((u, index) => {
+						{ui.map((u) => {
 							const commonProps = {
 								id: u.id,
 								name: u.id,
-								required: u.required,
 							};
 
 							switch (u.component) {
@@ -99,7 +165,10 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 														[u.id]: "",
 													}))
 												}
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
 											/>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}
 										</div>
 									);
 								case "number":
@@ -116,7 +185,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												{...commonProps}
 												placeholder={`Enter your ${u.label}`}
 												className="bg-white"
-												value={numbers[u.id]}
+												value={numbers[u.id] ?? ""}
 												onChange={(e) => handleNumber(u.id, e.target.value)}
 												onInput={() =>
 													setErrors((prev) => ({
@@ -124,7 +193,10 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 														[u.id]: "",
 													}))
 												}
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
 											/>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}
 										</div>
 									);
 								case "file":
@@ -158,7 +230,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 														id="date"
 														className="justify-between font-normal w-full text-[16px] text-muted-foreground hover:bg-white hover:text-muted-foreground"
 													>
-														{dates[index] ? dates[index].toDateString() : u.label}
+														{dates[u.id] ? dates[u.id]?.toDateString() : u.label}
 														<ChevronDownIcon />
 													</Button>
 												</PopoverTrigger>
@@ -168,11 +240,16 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 														selected={dates[u.id]}
 														captionLayout="dropdown"
 														onSelect={(d) => {
+															setErrors((prev) => ({
+																...prev,
+																[u.id]: "",
+															}));
 															handleDate(u.id, d);
 														}}
 													/>
 												</PopoverContent>
 											</Popover>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}
 										</div>
 									);
 								case "checkbox":
@@ -189,7 +266,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 									return (
 										<div key={u.id} className="w-full">
 											<Label htmlFor={u.id}>{u.label}</Label>
-											<Select name={u.id} required={u.required}>
+											<Select name={u.id}>
 												<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
 													<SelectValue placeholder="Select an option" />
 												</SelectTrigger>
@@ -215,7 +292,15 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 									return (
 										<div key={u.id}>
 											<p className="mb-2 font-medium">{u.label}</p>
-											<RadioGroup name={u.id} required={u.required}>
+											<RadioGroup
+												name={u.id}
+												onValueChange={() => {
+													setErrors((prev) => ({
+														...prev,
+														[u.id]: "",
+													}));
+												}}
+											>
 												{u.options.length > 0 &&
 													u.options.map((opt) => (
 														<div key={opt} className="flex items-center gap-3">
@@ -224,6 +309,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 														</div>
 													))}
 											</RadioGroup>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}
 										</div>
 									);
 
@@ -237,7 +323,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 												placeholder={`Enter ${u.label.toLowerCase()} here`}
 												className="bg-white"
 												name={u.id}
-												value={textAreas[u.id]}
+												value={textAreas[u.id] ?? ""}
 												onChange={(e) => handleTextArea(u.id, e.target.value)}
 											/>
 										</div>
