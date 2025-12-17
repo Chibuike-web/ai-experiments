@@ -72,12 +72,9 @@ export default function FormBuilderClient() {
 					return;
 				}
 
-				console.log(data);
 				setUi(data.ui.fields);
 				setUserId(data.id);
 				setTitle(data.title);
-
-				if (inputRef.current) inputRef.current.value = "";
 			} catch {
 				setError("Network error");
 			}
@@ -137,7 +134,7 @@ export default function FormBuilderClient() {
 												<Input
 													type={u.component}
 													{...commonProps}
-													placeholder={`Enter your ${u.label}`}
+													placeholder={`Enter your ${u.label.toLowerCase()}`}
 													className="bg-white"
 												/>
 											</div>
@@ -156,7 +153,7 @@ export default function FormBuilderClient() {
 															id="date"
 															className="justify-between font-normal w-full text-[16px] text-muted-foreground hover:bg-white hover:text-muted-foreground"
 														>
-															{date ? date.toDateString() : u.label}
+															{date ? date.toDateString() : `Enter your ${u.label.toLowerCase()}`}
 															<ChevronDownIcon />
 														</Button>
 													</PopoverTrigger>
@@ -175,14 +172,31 @@ export default function FormBuilderClient() {
 										);
 									case "checkbox":
 										return (
-											<div key={u.id}>
-												<Label htmlFor={u.id}>
-													<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
-													{u.label}
-												</Label>
+											<div key={u.id} className="space-y-3">
+												<div className="flex items-center gap-1 mb-2">
+													<span className="font-medium">{u.label}</span>
+													{u.required && (
+														<span className="text-[14px] text-muted-foreground">(required)</span>
+													)}
+												</div>
+
+												<div className="space-y-2">
+													{u.options.map((opt) => (
+														<div key={opt} className="flex items-center gap-2">
+															<input
+																type="checkbox"
+																id={`${u.id}-${opt}`}
+																name={u.id}
+																value={opt}
+															/>
+															<Label htmlFor={`${u.id}-${opt}`} className="cursor-pointer">
+																{toSentenceCase(opt)}
+															</Label>
+														</div>
+													))}
+												</div>
 											</div>
 										);
-
 									case "select":
 										return (
 											<div key={u.id} className="w-full">
@@ -241,8 +255,18 @@ export default function FormBuilderClient() {
 									default:
 										return (
 											<div key={u.id}>
-												<Label htmlFor={u.id}> {u.label}</Label>
-												<Input type="text" {...commonProps} />
+												<div className="flex items-center gap-1 mb-2">
+													<Label htmlFor={u.id}>{u.label}</Label>
+													<span className="text-[14px] text-muted-foreground">
+														{u.required && "(required)"}
+													</span>
+												</div>
+												<Input
+													type={u.component}
+													{...commonProps}
+													placeholder={`Enter your ${u.label}`}
+													className="bg-white"
+												/>
 											</div>
 										);
 								}

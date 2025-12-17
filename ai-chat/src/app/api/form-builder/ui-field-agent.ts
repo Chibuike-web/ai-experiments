@@ -58,20 +58,34 @@ STRICT MAPPING RULES:
    - type "string" → component "text"
    - type "text-area" → component "text-area"
    - type "number" → component "number"
-   - type "boolean" → component "checkbox"
+   - type "boolean" → component "radio" with options ["Yes", "No"]
    - type "date" → component "date"
-   - type "enum" → component "select"
    - type "file" → component "file"
    - type "radio" → component "radio"
+   - type "enum":
+       - if the field requires single selection → component "select"
+       - if the field requires multiple selection → component "checkbox"
 
 5. options:
-   - For enum → use input.options exactly.
-   - For radio → use input.options exactly.
-   - For all other types → options = [].
+   - For component "select" → use input.options exactly.
+   - For component "checkbox" → use input.options exactly.
+   - For component "radio" → use input.options exactly.
+   - For all other components → options = [].
 
 6. Never generate fields that are not in the input.
 7. Never omit "required" or "options".
 8. Output must be pure JSON matching the Zod schema—no comments, no explanation, no extra text.
+
+9. One question maps to exactly one field.
+   - Never generate both a select and a checkbox for the same question.
+
+10. Checkbox usage rules:
+    - Use component "checkbox" only for multiple selection.
+    - Checkbox must represent a question.
+    - The field "label" must be the question text.
+    - Checkbox options must always be rendered below the label.
+    - Checkbox must have one or more options.
+    - Never use checkbox for yes/no or true/false questions.
 `;
 
 const model = wrapLanguageModel({

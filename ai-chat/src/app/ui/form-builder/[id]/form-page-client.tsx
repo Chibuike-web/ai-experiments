@@ -25,7 +25,11 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 	const [texts, setTexts] = useState<Record<string, string>>({});
 	const [numbers, setNumbers] = useState<Record<string, string>>({});
 	const [textAreas, setTextAreas] = useState<Record<string, string>>({});
+	const [files, setFiles] = useState<Record<string, File | null>>({});
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [checkboxes, setCheckboxes] = useState<Record<string, string[]>>({});
+	const [selects, setSelects] = useState<Record<string, string>>({});
+	const [radios, setRadios] = useState<Record<string, string>>({});
 
 	const handleDate = (id: string, value: Date | undefined) => {
 		setDates((prev) => ({
@@ -54,16 +58,38 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 			[id]: value,
 		}));
 	};
+	const handleFile = (id: string, file: File | null) => {
+		setFiles((prev) => ({
+			...prev,
+			[id]: file,
+		}));
+	};
 
+	const handleCheckbox = (id: string, option: string, checked: boolean) => {
+		setCheckboxes((prev) => ({
+			...prev,
+			[id]: checked ? [...(prev[id] || []), option] : prev[id].filter((opt) => opt !== option),
+		}));
+	};
+
+	const handleSelect = (id: string, value: string) => {
+		setSelects((prev) => ({
+			...prev,
+			[id]: value,
+		}));
+	};
+
+	const handleRadio = (id: string, value: string) => {
+		setRadios((prev) => ({
+			...prev,
+			[id]: value,
+		}));
+	};
 	const handleFormSubmit = (e: FormEvent) => {
 		console.log("Error");
 		setErrors({});
 		e.preventDefault();
-		const formData = {
-			date: dates,
-			text: texts,
-			number: numbers,
-		};
+
 		const newErrors: Record<string, string> = {};
 
 		ui.forEach((field) => {
@@ -102,7 +128,13 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 					break;
 				}
 
-				case "select":
+				case "select": {
+					const value = selects[field.id];
+					if (!value) {
+						newErrors[field.id] = `This field is required`;
+					}
+					break;
+				}
 				case "radio": {
 					const value = texts[field.id];
 					if (!value) {
@@ -112,12 +144,18 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 				}
 
 				case "file": {
-					// If you later store files in state, validate here
+					const file = files[field.id];
+					if (!file) {
+						newErrors[field.id] = `This field is required`;
+					}
 					break;
 				}
 
 				case "checkbox": {
-					// Native checkbox "required" handles this
+					const options = checkboxes[field.id];
+					if (!options || options.length === 0) {
+						newErrors[field.id] = `This field is required`;
+					}
 					break;
 				}
 			}
@@ -127,6 +165,14 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 			setErrors(newErrors);
 			return;
 		}
+
+		const formData = {
+			date: dates,
+			text: texts,
+			number: numbers,
+			file: files,
+			textArea: textAreas,
+		};
 
 		console.log(formData);
 	};
@@ -155,7 +201,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 											<Input
 												type={u.component}
 												{...commonProps}
-												placeholder={`Enter your ${u.label}`}
+												placeholder={`Enter your ${u.label.toLowerCase()}`}
 												className="bg-white"
 												value={texts[u.id] ?? ""}
 												onChange={(e) => handleText(u.id, e.target.value)}
@@ -183,7 +229,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 											<Input
 												type={u.component}
 												{...commonProps}
-												placeholder={`Enter your ${u.label}`}
+												placeholder={`Enter your ${u.label.toLowerCase()}`}
 												className="bg-white"
 												value={numbers[u.id] ?? ""}
 												onChange={(e) => handleNumber(u.id, e.target.value)}
@@ -211,26 +257,44 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 											<Input
 												type={u.component}
 												{...commonProps}
-												placeholder={`Enter your ${u.label}`}
+												placeholder={`Enter your ${u.label.toLowerCase()}`}
 												className="bg-white"
+												onChange={(e) => {
+													setErrors((prev) => ({
+														...prev,
+														[u.id]: "",
+													}));
+													handleFile(u.id, e.target.files?.[0] ?? null);
+												}}
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
 											/>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}{" "}
 										</div>
 									);
 
 								case "date":
 									return (
 										<div key={u.id}>
-											<Label htmlFor={u.id} className="mb-2">
-												{u.label}
-											</Label>
-											<Popover>
+											<div className="flex items-center gap-1 mb-2">
+												<Label htmlFor={u.id}>{u.label}</Label>
+												<span className="text-[14px] text-muted-foreground">
+													{u.required && "(required)"}
+												</span>
+											</div>
+											<Popover
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
+											>
 												<PopoverTrigger asChild>
 													<Button
 														variant="outline"
 														id="date"
 														className="justify-between font-normal w-full text-[16px] text-muted-foreground hover:bg-white hover:text-muted-foreground"
 													>
-														{dates[u.id] ? dates[u.id]?.toDateString() : u.label}
+														{dates[u.id]
+															? dates[u.id]?.toDateString()
+															: `Enter your ${u.label.toLowerCase()}`}
 														<ChevronDownIcon />
 													</Button>
 												</PopoverTrigger>
@@ -254,11 +318,40 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 									);
 								case "checkbox":
 									return (
-										<div key={u.id}>
-											<Label htmlFor={u.id}>
-												<input type={u.component} id={u.id} name={u.id} required={u.required} />{" "}
-												{u.label}
-											</Label>
+										<div key={u.id} className="space-y-3">
+											<div className="flex items-center gap-1 mb-2">
+												<span className="font-medium">{u.label}</span>
+												<span className="text-[14px] text-muted-foreground">
+													{u.required && "(required)"}
+												</span>
+											</div>
+
+											<div className="space-y-2">
+												{u.options.map((opt) => (
+													<div key={opt} className="flex items-center gap-2">
+														<input
+															type="checkbox"
+															id={`${u.id}-${opt}`}
+															name={u.id}
+															value={opt}
+															onChange={(e) => handleCheckbox(u.id, opt, e.target.checked)}
+															onInput={() => {
+																setErrors((prev) => ({
+																	...prev,
+																	[u.id]: "",
+																}));
+															}}
+															aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+															aria-invalid={!!errors[u.id]}
+														/>
+														<Label htmlFor={`${u.id}-${opt}`} className="cursor-pointer">
+															{toSentenceCase(opt)}
+														</Label>
+													</div>
+												))}
+											</div>
+
+											{errors[u.id] && <p className="text-sm text-red-500">{errors[u.id]}</p>}
 										</div>
 									);
 
@@ -266,7 +359,15 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 									return (
 										<div key={u.id} className="w-full">
 											<Label htmlFor={u.id}>{u.label}</Label>
-											<Select name={u.id}>
+											<Select
+												name={u.id}
+												onValueChange={(value) => {
+													setErrors((prev) => ({ ...prev, [u.id]: "" }));
+													handleSelect(u.id, value);
+												}}
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
+											>
 												<SelectTrigger className="w-full mt-2 text-[16px] text-muted-foreground bg-white">
 													<SelectValue placeholder="Select an option" />
 												</SelectTrigger>
@@ -285,6 +386,7 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 													)}
 												</SelectContent>
 											</Select>
+											{errors[u.id] && <p className="text-sm text-red-500 mt-1">{errors[u.id]}</p>}
 										</div>
 									);
 
@@ -294,12 +396,17 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 											<p className="mb-2 font-medium">{u.label}</p>
 											<RadioGroup
 												name={u.id}
-												onValueChange={() => {
+												onValueChange={(value) => {
 													setErrors((prev) => ({
 														...prev,
 														[u.id]: "",
 													}));
+													handleRadio(u.id, value);
 												}}
+												value={radios[u.id]}
+												aria-labelledby={`${u.id}-label`}
+												aria-describedby={errors[u.id] ? `${u.label} error` : undefined}
+												aria-invalid={!!errors[u.id]}
 											>
 												{u.options.length > 0 &&
 													u.options.map((opt) => (
@@ -331,8 +438,18 @@ export default function FormPageClient({ ui }: { ui: UIType[] }) {
 								default:
 									return (
 										<div key={u.id}>
-											<Label htmlFor={u.id}> {u.label}</Label>
-											<Input type="text" {...commonProps} />
+											<div className="flex items-center gap-1 mb-2">
+												<Label htmlFor={u.id}>{u.label}</Label>
+												<span className="text-[14px] text-muted-foreground">
+													{u.required && "(required)"}
+												</span>
+											</div>
+											<Input
+												type={u.component}
+												{...commonProps}
+												placeholder={`Enter your ${u.label.toLowerCase()}`}
+												className="bg-white"
+											/>
 										</div>
 									);
 							}
