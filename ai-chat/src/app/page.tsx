@@ -1,5 +1,11 @@
-import { redirect } from "next/navigation";
+import { ComponentExample } from "@/components/component-example";
+import { Example } from "@/components/example";
 
 export default function Home() {
-	redirect("/ui/completion");
+	return (
+		<main>
+			<Example title="Example" />
+			<ComponentExample />
+		</main>
+	);
 }
